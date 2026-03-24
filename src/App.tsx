@@ -36,11 +36,51 @@ import { supabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
 
 export default function App() {
-  const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS);
-  const [substitutes, setSubstitutes] = useState<Player[]>(SUBSTITUTES);
+  const [players, setPlayers] = useState<Player[]>(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).players;
+      } catch (e) {
+        return INITIAL_PLAYERS;
+      }
+    }
+    return INITIAL_PLAYERS;
+  });
+  const [substitutes, setSubstitutes] = useState<Player[]>(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).substitutes;
+      } catch (e) {
+        return SUBSTITUTES;
+      }
+    }
+    return SUBSTITUTES;
+  });
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [formation, setFormation] = useState<Formation>('2-3-1');
-  const [mentality, setMentality] = useState<Mentality>('Balanced');
+  const [formation, setFormation] = useState<Formation>(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).formation;
+      } catch (e) {
+        return '2-3-1';
+      }
+    }
+    return '2-3-1';
+  });
+  const [mentality, setMentality] = useState<Mentality>(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).mentality;
+      } catch (e) {
+        return 'Balanced';
+      }
+    }
+    return 'Balanced';
+  });
   const [isPitchExpanded, setIsPitchExpanded] = useState(false);
 
   // Auth State
@@ -52,15 +92,85 @@ export default function App() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
   // Match Timer and Score State
-  const [matchTime, setMatchTime] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [scoreHome, setScoreHome] = useState(0);
-  const [scoreAway, setScoreAway] = useState(0);
-  const [teamHomeName, setTeamHomeName] = useState('Home');
-  const [teamAwayName, setTeamAwayName] = useState('Away');
-  const [pitchColor, setPitchColor] = useState('#1E3A1E'); // Default dark green
+  const [matchTime, setMatchTime] = useState(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).matchTime;
+      } catch (e) {
+        return 0;
+      }
+    }
+    return 0;
+  });
+  const [isTimerRunning, setIsTimerRunning] = useState(false); // Always start paused on refresh
+  const [scoreHome, setScoreHome] = useState(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).scoreHome;
+      } catch (e) {
+        return 0;
+      }
+    }
+    return 0;
+  });
+  const [scoreAway, setScoreAway] = useState(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).scoreAway;
+      } catch (e) {
+        return 0;
+      }
+    }
+    return 0;
+  });
+  const [teamHomeName, setTeamHomeName] = useState(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).teamHomeName;
+      } catch (e) {
+        return 'Home';
+      }
+    }
+    return 'Home';
+  });
+  const [teamAwayName, setTeamAwayName] = useState(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).teamAwayName;
+      } catch (e) {
+        return 'Away';
+      }
+    }
+    return 'Away';
+  });
+  const [pitchColor, setPitchColor] = useState(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).pitchColor;
+      } catch (e) {
+        return '#1E3A1E';
+      }
+    }
+    return '#1E3A1E';
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [matchDuration, setMatchDuration] = useState(40); // Default 40 mins
+  const [matchDuration, setMatchDuration] = useState(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        return JSON.parse(saved).matchDuration;
+      } catch (e) {
+        return 40;
+      }
+    }
+    return 40;
+  });
   const [matchHistory, setMatchHistory] = useState<any[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isPostMatchOpen, setIsPostMatchOpen] = useState(false);
@@ -151,34 +261,6 @@ export default function App() {
     };
     localStorage.setItem('current_match_state', JSON.stringify(matchState));
   }, [players, substitutes, formation, mentality, matchTime, isTimerRunning, scoreHome, scoreAway, teamHomeName, teamAwayName, matchDuration, pitchColor]);
-
-  // Load saved match state on mount
-  React.useEffect(() => {
-    const saved = localStorage.getItem('current_match_state');
-    if (saved) {
-      try {
-        const state = JSON.parse(saved);
-        setPlayers(state.players);
-        setSubstitutes(state.substitutes);
-        setFormation(state.formation);
-        setMentality(state.mentality);
-        setMatchTime(state.matchTime);
-        setIsTimerRunning(state.isTimerRunning);
-        setScoreHome(state.scoreHome);
-        setScoreAway(state.scoreAway);
-        setTeamHomeName(state.teamHomeName);
-        setTeamAwayName(state.teamAwayName);
-        setMatchDuration(state.matchDuration);
-        setPitchColor(state.pitchColor);
-        
-        setToastMessage('Match state restored from previous session');
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      } catch (e) {
-        console.error('Failed to restore match state:', e);
-      }
-    }
-  }, []);
 
   const handleResetMatch = () => {
     if (window.confirm('Reset all match data? This will clear all current progress.')) {
