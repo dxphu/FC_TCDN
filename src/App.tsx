@@ -83,6 +83,7 @@ export default function App() {
   });
   const [isPitchExpanded, setIsPitchExpanded] = useState(false);
   const [isPortrait, setIsPortrait] = useState(typeof window !== 'undefined' ? window.innerHeight > window.innerWidth : false);
+  const pitchRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -792,6 +793,7 @@ export default function App() {
           isPitchExpanded ? "lg:col-span-12 fixed inset-0 z-50 p-4 bg-[#141414] lg:relative lg:inset-auto lg:z-0 lg:p-0" : "lg:col-span-6"
         )}>
           <div id="pitch-container" 
+            ref={pitchRef}
             className={cn(
               "relative rounded-xl border-4 border-[#E4E3E0]/10 overflow-hidden shadow-2xl transition-all duration-500",
               isPitchExpanded ? "w-full h-full" : "aspect-[4/3]"
@@ -833,11 +835,12 @@ export default function App() {
             {players.map(player => (
               <motion.div
                 key={player.id}
-                layoutId={`player-${player.id}`}
                 drag
+                dragConstraints={pitchRef}
+                dragElastic={0}
                 dragMomentum={false}
                 onDragEnd={(_, info) => {
-                  const pitchElement = document.getElementById('pitch-container');
+                  const pitchElement = pitchRef.current;
                   if (!pitchElement) return;
                   const rect = pitchElement.getBoundingClientRect();
                   
