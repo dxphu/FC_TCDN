@@ -133,6 +133,72 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isTimerRunning, matchDuration]);
 
+  // Auto-save current match state to localStorage
+  React.useEffect(() => {
+    const matchState = {
+      players,
+      substitutes,
+      formation,
+      mentality,
+      matchTime,
+      isTimerRunning,
+      scoreHome,
+      scoreAway,
+      teamHomeName,
+      teamAwayName,
+      matchDuration,
+      pitchColor
+    };
+    localStorage.setItem('current_match_state', JSON.stringify(matchState));
+  }, [players, substitutes, formation, mentality, matchTime, isTimerRunning, scoreHome, scoreAway, teamHomeName, teamAwayName, matchDuration, pitchColor]);
+
+  // Load saved match state on mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem('current_match_state');
+    if (saved) {
+      try {
+        const state = JSON.parse(saved);
+        setPlayers(state.players);
+        setSubstitutes(state.substitutes);
+        setFormation(state.formation);
+        setMentality(state.mentality);
+        setMatchTime(state.matchTime);
+        setIsTimerRunning(state.isTimerRunning);
+        setScoreHome(state.scoreHome);
+        setScoreAway(state.scoreAway);
+        setTeamHomeName(state.teamHomeName);
+        setTeamAwayName(state.teamAwayName);
+        setMatchDuration(state.matchDuration);
+        setPitchColor(state.pitchColor);
+        
+        setToastMessage('Match state restored from previous session');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      } catch (e) {
+        console.error('Failed to restore match state:', e);
+      }
+    }
+  }, []);
+
+  const handleResetMatch = () => {
+    if (window.confirm('Reset all match data? This will clear all current progress.')) {
+      setPlayers(INITIAL_PLAYERS);
+      setSubstitutes(SUBSTITUTES);
+      setMatchTime(0);
+      setIsTimerRunning(false);
+      setScoreHome(0);
+      setScoreAway(0);
+      setFormation('2-3-1');
+      setMentality('Balanced');
+      localStorage.removeItem('current_match_state');
+      setIsSettingsOpen(false);
+      
+      setToastMessage('Match reset to initial state');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  };
+
   const handleEndMatch = async () => {
     const totalErrors = players.reduce((sum, p) => sum + (p.errors || 0), 0);
     const avgRating = players.reduce((sum, p) => sum + (p.rating || 0), 0) / players.length;
@@ -179,6 +245,7 @@ export default function App() {
     setMatchHistory(prev => [matchRecord, ...prev]);
     setIsTimerRunning(false);
     setIsPostMatchOpen(true);
+    localStorage.removeItem('current_match_state');
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -1041,16 +1108,7 @@ export default function App() {
                     End Match & Save Stats
                   </button>
                   <button 
-                    onClick={() => {
-                      if (window.confirm('Reset all match data?')) {
-                        setScoreHome(0);
-                        setScoreAway(0);
-                        setMatchTime(0);
-                        setIsTimerRunning(false);
-                        setPlayers(INITIAL_PLAYERS);
-                        setIsSettingsOpen(false);
-                      }
-                    }}
+                    onClick={handleResetMatch}
                     className="w-full py-3 bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] uppercase font-bold tracking-widest hover:bg-red-500 hover:text-white transition-all rounded"
                   >
                     Reset Match Data
