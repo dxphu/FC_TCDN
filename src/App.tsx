@@ -289,8 +289,56 @@ export default function App() {
   };
 
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('Tactical Instruction Transmitted');
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
 
   const handleApply = () => {
+    setToastMessage('Tactical Instruction Transmitted');
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleSubstitution = (subId: string) => {
+    if (!selectedPlayerId) return;
+    
+    const activePlayerIndex = players.findIndex(p => p.id === selectedPlayerId);
+    const subPlayerIndex = substitutes.findIndex(p => p.id === subId);
+    
+    if (activePlayerIndex === -1 || subPlayerIndex === -1) return;
+    
+    const activePlayer = players[activePlayerIndex];
+    const subPlayer = substitutes[subPlayerIndex];
+    
+    const newPlayers = [...players];
+    const newSubstitutes = [...substitutes];
+    
+    const updatedSubPlayer: Player = {
+      ...subPlayer,
+      x: activePlayer.x,
+      y: activePlayer.y,
+      position: activePlayer.position,
+      positionTitle: activePlayer.positionTitle,
+      status: 'active',
+      errors: 0,
+      rating: 6.0
+    };
+    
+    const updatedActivePlayer: Player = {
+      ...activePlayer,
+      status: 'sub',
+      x: 0,
+      y: 0
+    };
+    
+    newPlayers[activePlayerIndex] = updatedSubPlayer;
+    newSubstitutes[subPlayerIndex] = updatedActivePlayer;
+    
+    setPlayers(newPlayers);
+    setSubstitutes(newSubstitutes);
+    setSelectedPlayerId(updatedSubPlayer.id);
+    setIsSubModalOpen(false);
+    
+    setToastMessage(`Substitution: ${activePlayer.name} ↔ ${subPlayer.name}`);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
@@ -307,7 +355,7 @@ export default function App() {
             className="fixed bottom-16 left-1/2 -translate-x-1/2 z-[100] bg-[#E4E3E0] text-[#141414] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3"
           >
             <Zap className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">Tactical Instruction Transmitted</span>
+            <span className="text-xs font-bold uppercase tracking-widest">{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -854,12 +902,22 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <button 
-                      onClick={handleApply}
-                      className="w-full mt-6 py-2 bg-[#E4E3E0] text-[#141414] text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-colors rounded-sm"
-                    >
-                      Apply Instruction
-                    </button>
+                    <div className="grid grid-cols-2 gap-2 mt-6">
+                      <button 
+                        onClick={() => setIsSubModalOpen(true)}
+                        className="flex items-center justify-center gap-2 py-3 bg-yellow-500 text-[#141414] text-[10px] font-bold uppercase tracking-widest hover:bg-yellow-400 transition-all rounded-sm"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        Substitute
+                      </button>
+                      <button 
+                        onClick={handleApply}
+                        className="flex items-center justify-center gap-2 py-3 bg-[#E4E3E0] text-[#141414] text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-all rounded-sm"
+                      >
+                        <Zap className="w-3 h-3" />
+                        Apply
+                      </button>
+                    </div>
                   </section>
                 </div>
               ) : (
@@ -998,6 +1056,69 @@ export default function App() {
                     Reset Match Data
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Substitution Modal */}
+      <AnimatePresence>
+        {isSubModalOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSubModalOpen(false)}
+              className="absolute inset-0 bg-[#141414]/90 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-[#1A1A1A] border border-[#E4E3E0]/20 p-8 rounded-lg shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-lg font-bold uppercase tracking-widest">Select Substitute</h2>
+                  <p className="text-[10px] opacity-50 uppercase tracking-widest mt-1">Replacing {selectedPlayer?.name}</p>
+                </div>
+                <button onClick={() => setIsSubModalOpen(false)} className="p-2 hover:bg-[#E4E3E0]/10 rounded-full transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {substitutes.length > 0 ? substitutes.map(sub => (
+                  <button 
+                    key={sub.id}
+                    onClick={() => handleSubstitution(sub.id)}
+                    className="w-full flex items-center justify-between p-4 bg-[#141414] border border-[#E4E3E0]/10 rounded hover:border-[#E4E3E0]/40 transition-all group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-[#E4E3E0]/5 flex items-center justify-center font-bold text-sm border border-[#E4E3E0]/10">
+                        {sub.number}
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold uppercase tracking-wide">{sub.name}</p>
+                        <p className="text-[10px] opacity-50 uppercase">{sub.positionTitle}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-[10px] opacity-50 uppercase">Rating</p>
+                        <p className="font-mono font-bold text-green-500">{(sub.rating || 6.0).toFixed(1)}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </button>
+                )) : (
+                  <div className="text-center py-12 opacity-30">
+                    <Users className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <p className="text-xs uppercase tracking-widest">No substitutes available</p>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
