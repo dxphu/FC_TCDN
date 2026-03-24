@@ -630,149 +630,161 @@ export default function App() {
       <main className="p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 max-w-[1600px] mx-auto">
         
         {/* Left Sidebar: Tactics & Team */}
-        <div className="lg:col-span-3 space-y-4">
-          <section className="bg-[#1A1A1A] border border-[#E4E3E0]/10 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-4 h-4 opacity-50" />
-              <h2 className="text-xs font-bold uppercase tracking-widest">Global Tactics</h2>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="text-[10px] uppercase opacity-50 block mb-2">Formation (Sân 7)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['2-3-1', '3-2-1', '2-1-2-1', '3-1-2'] as Formation[]).map(f => (
-                    <button 
-                      key={f}
-                      onClick={() => setFormation(f)}
+        <AnimatePresence mode="wait">
+          {!isPitchExpanded && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="lg:col-span-3 space-y-4"
+            >
+              <section className="bg-[#1A1A1A] border border-[#E4E3E0]/10 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <Shield className="w-4 h-4 opacity-50" />
+                  <h2 className="text-xs font-bold uppercase tracking-widest">Global Tactics</h2>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-2">Formation (Sân 7)</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['2-3-1', '3-2-1', '2-1-2-1', '3-1-2'] as Formation[]).map(f => (
+                        <button 
+                          key={f}
+                          onClick={() => setFormation(f)}
+                          className={cn(
+                            "py-2 text-xs border transition-all",
+                            formation === f 
+                              ? "bg-[#E4E3E0] text-[#141414] border-[#E4E3E0]" 
+                              : "border-[#E4E3E0]/20 hover:border-[#E4E3E0]/50"
+                          )}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-2">Mentality</label>
+                    <div className="flex border border-[#E4E3E0]/20 rounded-sm overflow-hidden">
+                      {(['Defensive', 'Balanced', 'Attacking'] as Mentality[]).map(m => (
+                        <button 
+                          key={m}
+                          onClick={() => setMentality(m)}
+                          className={cn(
+                            "flex-1 py-2 text-[10px] uppercase tracking-tighter transition-all",
+                            mentality === m 
+                              ? "bg-[#E4E3E0] text-[#141414]" 
+                              : "hover:bg-[#E4E3E0]/5"
+                          )}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-[#1A1A1A] border border-[#E4E3E0]/10 p-4 rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 opacity-50" />
+                    <h2 className="text-xs font-bold uppercase tracking-widest">Active Squad</h2>
+                  </div>
+                  <span className="text-[10px] opacity-50">{players.length}/7 Active</span>
+                </div>
+                <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {players.map(player => (
+                    <button
+                      key={player.id}
+                      onClick={() => setSelectedPlayerId(player.id)}
                       className={cn(
-                        "py-2 text-xs border transition-all",
-                        formation === f 
-                          ? "bg-[#E4E3E0] text-[#141414] border-[#E4E3E0]" 
-                          : "border-[#E4E3E0]/20 hover:border-[#E4E3E0]/50"
+                        "w-full flex items-center justify-between p-2 text-left transition-all group border-l-2",
+                        selectedPlayerId === player.id 
+                          ? "bg-[#E4E3E0]/10 border-[#E4E3E0]" 
+                          : "border-transparent hover:bg-[#E4E3E0]/5"
                       )}
                     >
-                      {f}
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-[10px] opacity-40 w-4">{player.number}</span>
+                        <div>
+                          <p className="text-xs font-medium">{player.name}</p>
+                          <p className="text-[9px] opacity-50 uppercase tracking-tighter">{player.position}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end">
+                          <div className="flex items-center gap-1">
+                            {player.errors && player.errors > 0 && (
+                              <span className="text-[7px] bg-red-500/20 text-red-500 px-1 rounded font-bold">
+                                {player.errors}E
+                            </span>
+                            )}
+                            <span className={cn(
+                              "text-[9px] font-mono font-bold",
+                              (player.rating || 0) >= 8 ? "text-green-500" :
+                              (player.rating || 0) >= 6 ? "text-yellow-500" :
+                              "text-red-500"
+                            )}>
+                              {player.rating?.toFixed(1)}
+                            </span>
+                          </div>
+                          <div className="w-12 h-1 bg-[#222] rounded-full overflow-hidden mt-1">
+                            <div 
+                              className="h-full bg-green-500 transition-all" 
+                              style={{ width: `${player.stats.stamina}%` }}
+                            />
+                          </div>
+                        </div>
+                        <ChevronRight className={cn(
+                          "w-3 h-3 transition-transform",
+                          selectedPlayerId === player.id ? "rotate-90" : "opacity-0 group-hover:opacity-100"
+                        )} />
+                      </div>
                     </button>
                   ))}
                 </div>
-              </div>
 
-              <div>
-                <label className="text-[10px] uppercase opacity-50 block mb-2">Mentality</label>
-                <div className="flex border border-[#E4E3E0]/20 rounded-sm overflow-hidden">
-                  {(['Defensive', 'Balanced', 'Attacking'] as Mentality[]).map(m => (
-                    <button 
-                      key={m}
-                      onClick={() => setMentality(m)}
-                      className={cn(
-                        "flex-1 py-2 text-[10px] uppercase tracking-tighter transition-all",
-                        mentality === m 
-                          ? "bg-[#E4E3E0] text-[#141414]" 
-                          : "hover:bg-[#E4E3E0]/5"
-                      )}
-                    >
-                      {m}
-                    </button>
-                  ))}
+                <div className="mt-6 pt-4 border-t border-[#E4E3E0]/10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="w-4 h-4 opacity-50" />
+                    <h2 className="text-xs font-bold uppercase tracking-widest">Substitutes</h2>
+                  </div>
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                    {substitutes.map(player => (
+                      <div
+                        key={player.id}
+                        className="w-full flex items-center justify-between p-2 text-left transition-all border-l-2 border-transparent bg-[#141414]/50 rounded-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-[10px] opacity-20 w-4">{player.number}</span>
+                          <div>
+                            <p className="text-xs font-medium opacity-60">{player.name}</p>
+                            <p className="text-[9px] opacity-30 uppercase tracking-tighter">{player.position}</p>
+                          </div>
+                        </div>
+                        <span className="text-[8px] uppercase font-bold opacity-20 tracking-widest">SUB</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="bg-[#1A1A1A] border border-[#E4E3E0]/10 p-4 rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 opacity-50" />
-                <h2 className="text-xs font-bold uppercase tracking-widest">Active Squad</h2>
-              </div>
-              <span className="text-[10px] opacity-50">{players.length}/7 Active</span>
-            </div>
-            <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {players.map(player => (
-                <button
-                  key={player.id}
-                  onClick={() => setSelectedPlayerId(player.id)}
-                  className={cn(
-                    "w-full flex items-center justify-between p-2 text-left transition-all group border-l-2",
-                    selectedPlayerId === player.id 
-                      ? "bg-[#E4E3E0]/10 border-[#E4E3E0]" 
-                      : "border-transparent hover:bg-[#E4E3E0]/5"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[10px] opacity-40 w-4">{player.number}</span>
-                    <div>
-                      <p className="text-xs font-medium">{player.name}</p>
-                      <p className="text-[9px] opacity-50 uppercase tracking-tighter">{player.position}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-end">
-                      <div className="flex items-center gap-1">
-                        {player.errors && player.errors > 0 && (
-                          <span className="text-[7px] bg-red-500/20 text-red-500 px-1 rounded font-bold">
-                            {player.errors}E
-                          </span>
-                        )}
-                        <span className={cn(
-                          "text-[9px] font-mono font-bold",
-                          (player.rating || 0) >= 8 ? "text-green-500" :
-                          (player.rating || 0) >= 6 ? "text-yellow-500" :
-                          "text-red-500"
-                        )}>
-                          {player.rating?.toFixed(1)}
-                        </span>
-                      </div>
-                      <div className="w-12 h-1 bg-[#222] rounded-full overflow-hidden mt-1">
-                        <div 
-                          className="h-full bg-green-500 transition-all" 
-                          style={{ width: `${player.stats.stamina}%` }}
-                        />
-                      </div>
-                    </div>
-                    <ChevronRight className={cn(
-                      "w-3 h-3 transition-transform",
-                      selectedPlayerId === player.id ? "rotate-90" : "opacity-0 group-hover:opacity-100"
-                    )} />
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-[#E4E3E0]/10">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-4 h-4 opacity-50" />
-                <h2 className="text-xs font-bold uppercase tracking-widest">Substitutes</h2>
-              </div>
-              <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                {substitutes.map(player => (
-                  <div
-                    key={player.id}
-                    className="w-full flex items-center justify-between p-2 text-left transition-all border-l-2 border-transparent bg-[#141414]/50 rounded-sm"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-[10px] opacity-20 w-4">{player.number}</span>
-                      <div>
-                        <p className="text-xs font-medium opacity-60">{player.name}</p>
-                        <p className="text-[9px] opacity-30 uppercase tracking-tighter">{player.position}</p>
-                      </div>
-                    </div>
-                    <span className="text-[8px] uppercase font-bold opacity-20 tracking-widest">SUB</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        </div>
+              </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Center: Pitch Visualization */}
         <div className={cn(
           "transition-all duration-500 ease-in-out",
-          isPitchExpanded ? "lg:col-span-9" : "lg:col-span-6"
+          isPitchExpanded ? "lg:col-span-12 fixed inset-0 z-50 p-4 bg-[#141414] lg:relative lg:inset-auto lg:z-0 lg:p-0" : "lg:col-span-6"
         )}>
           <div id="pitch-container" 
-            className="relative aspect-[4/3] rounded-xl border-4 border-[#E4E3E0]/10 overflow-hidden shadow-2xl transition-colors duration-500"
+            className={cn(
+              "relative rounded-xl border-4 border-[#E4E3E0]/10 overflow-hidden shadow-2xl transition-all duration-500",
+              isPitchExpanded ? "w-full h-full" : "aspect-[4/3]"
+            )}
             style={{ backgroundColor: pitchColor }}
           >
             {/* Pitch Markings */}
