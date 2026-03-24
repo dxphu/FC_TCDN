@@ -82,6 +82,17 @@ export default function App() {
     return 'Balanced';
   });
   const [isPitchExpanded, setIsPitchExpanded] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(typeof window !== 'undefined' ? window.innerHeight > window.innerWidth : false);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isVerticalPitch = isPitchExpanded && isPortrait;
 
   // Auth State
   const [user, setUser] = useState<User | null>(null);
@@ -789,10 +800,33 @@ export default function App() {
           >
             {/* Pitch Markings */}
             <div className="absolute inset-4 border-2 border-[#E4E3E0]/20 pointer-events-none">
-              <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-[#E4E3E0]/20 -translate-y-1/2" />
-              <div className="absolute top-1/2 left-1/2 w-32 h-32 border-2 border-[#E4E3E0]/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
-              <div className="absolute top-1/2 left-0 w-24 h-48 border-2 border-[#E4E3E0]/20 -translate-y-1/2" />
-              <div className="absolute top-1/2 right-0 w-24 h-48 border-2 border-[#E4E3E0]/20 -translate-y-1/2" />
+              {/* Center Line */}
+              <div className={cn(
+                "absolute bg-[#E4E3E0]/20",
+                isVerticalPitch 
+                  ? "top-1/2 left-0 right-0 h-[2px] -translate-y-1/2" 
+                  : "left-1/2 top-0 bottom-0 w-[2px] -translate-x-1/2"
+              )} />
+              
+              {/* Center Circle */}
+              <div className="absolute top-1/2 left-1/2 w-[25%] aspect-square border-2 border-[#E4E3E0]/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
+              
+              {/* Penalty Areas */}
+              {isVerticalPitch ? (
+                <>
+                  {/* Top Goal Area */}
+                  <div className="absolute top-0 left-1/2 w-[50%] h-[12%] border-2 border-t-0 border-[#E4E3E0]/20 -translate-x-1/2" />
+                  {/* Bottom Goal Area */}
+                  <div className="absolute bottom-0 left-1/2 w-[50%] h-[12%] border-2 border-b-0 border-[#E4E3E0]/20 -translate-x-1/2" />
+                </>
+              ) : (
+                <>
+                  {/* Left Goal Area */}
+                  <div className="absolute left-0 top-1/2 w-[12%] h-[50%] border-2 border-l-0 border-[#E4E3E0]/20 -translate-y-1/2" />
+                  {/* Right Goal Area */}
+                  <div className="absolute right-0 top-1/2 w-[12%] h-[50%] border-2 border-r-0 border-[#E4E3E0]/20 -translate-y-1/2" />
+                </>
+              )}
             </div>
 
             {/* Players on Pitch */}
@@ -806,8 +840,13 @@ export default function App() {
                   const pitchElement = document.getElementById('pitch-container');
                   if (!pitchElement) return;
                   const rect = pitchElement.getBoundingClientRect();
-                  const newX = ((info.point.x - rect.left) / rect.width) * 100;
-                  const newY = ((info.point.y - rect.top) / rect.height) * 100;
+                  
+                  const calculatedX = ((info.point.x - rect.left) / rect.width) * 100;
+                  const calculatedY = ((info.point.y - rect.top) / rect.height) * 100;
+                  
+                  // If vertical, swap coordinates back to data model
+                  const newX = isVerticalPitch ? calculatedY : calculatedX;
+                  const newY = isVerticalPitch ? calculatedX : calculatedY;
                   
                   // Clamp values between 0 and 100
                   const clampedX = Math.max(0, Math.min(100, newX));
@@ -823,8 +862,8 @@ export default function App() {
                   selectedPlayerId === player.id ? "z-20" : "z-10"
                 )}
                 style={{ 
-                  left: `${player.x}%`, 
-                  top: `${player.y}%`,
+                  left: isVerticalPitch ? `${player.y}%` : `${player.x}%`, 
+                  top: isVerticalPitch ? `${player.x}%` : `${player.y}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
