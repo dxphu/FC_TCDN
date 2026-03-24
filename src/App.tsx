@@ -31,7 +31,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { cn } from './lib/utils';
-import { INITIAL_PLAYERS, SUBSTITUTES, Player, Formation, Mentality, FORMATION_POSITIONS, FORMATION_DETAILS } from './types';
+import { INITIAL_PLAYERS, SUBSTITUTES, Player, Formation, Mentality, FORMATION_POSITIONS, FORMATION_DETAILS, TACTICAL_SCENARIOS, TacticalScenario } from './types';
 import { supabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
 
@@ -279,6 +279,15 @@ export default function App() {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
+  };
+
+  const applyTacticalScenario = (scenario: TacticalScenario) => {
+    setFormation(scenario.recommendedFormation);
+    setMentality(scenario.recommendedMentality);
+    
+    setToastMessage(`Đã áp dụng: ${scenario.label} (${scenario.recommendedFormation})`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
   const handleEndMatch = async () => {
@@ -1176,6 +1185,42 @@ export default function App() {
                         <span className="text-[8px] uppercase font-bold">{theme.name}</span>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] uppercase font-bold tracking-widest opacity-40">Cố vấn chiến thuật (Tactical Advisor)</label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {TACTICAL_SCENARIOS.map(scenario => {
+                      const IconComponent = {
+                        Shield: Shield,
+                        Target: Target,
+                        Zap: Zap,
+                        Activity: Activity,
+                        Trophy: Trophy,
+                        Users: Users
+                      }[scenario.icon] || Info;
+
+                      return (
+                        <button 
+                          key={scenario.id}
+                          onClick={() => applyTacticalScenario(scenario)}
+                          className="flex items-center gap-3 p-3 bg-[#141414] border border-[#E4E3E0]/10 rounded hover:border-[#E4E3E0]/30 transition-all text-left group"
+                        >
+                          <div className="p-2 bg-[#E4E3E0]/5 rounded group-hover:bg-[#E4E3E0]/10 transition-colors">
+                            <IconComponent className="w-4 h-4 opacity-70" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-[10px] font-bold uppercase tracking-wide">{scenario.label}</p>
+                            <p className="text-[8px] opacity-40 uppercase tracking-tighter mt-0.5">{scenario.description}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[8px] font-mono opacity-50">{scenario.recommendedFormation}</p>
+                            <p className="text-[8px] font-mono opacity-50">{scenario.recommendedMentality}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

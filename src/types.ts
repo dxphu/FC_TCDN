@@ -24,6 +24,66 @@ export interface Player {
 export type Formation = '2-3-1' | '3-2-1' | '2-1-2-1' | '3-1-2';
 export type Mentality = 'Defensive' | 'Balanced' | 'Attacking';
 
+export interface TacticalScenario {
+  id: string;
+  label: string;
+  description: string;
+  recommendedFormation: Formation;
+  recommendedMentality: Mentality;
+  icon: string;
+}
+
+export const TACTICAL_SCENARIOS: TacticalScenario[] = [
+  {
+    id: 'strong-attack',
+    label: 'Đối thủ tấn công mạnh',
+    description: 'Đối phương ép sân liên tục, cần hàng thủ dày và bọc lót tốt.',
+    recommendedFormation: '3-2-1',
+    recommendedMentality: 'Defensive',
+    icon: 'Shield'
+  },
+  {
+    id: 'park-bus',
+    label: 'Đối thủ phòng ngự lùi sâu',
+    description: 'Đối phương tập trung đông người ở sân nhà, cần sự sáng tạo và áp sát.',
+    recommendedFormation: '2-1-2-1',
+    recommendedMentality: 'Attacking',
+    icon: 'Target'
+  },
+  {
+    id: 'counter-attack',
+    label: 'Đối thủ phản công nhanh',
+    description: 'Đối phương có tốc độ cao, cần sự cân bằng giữa các tuyến.',
+    recommendedFormation: '3-1-2',
+    recommendedMentality: 'Balanced',
+    icon: 'Zap'
+  },
+  {
+    id: 'balanced',
+    label: 'Trận đấu cân bằng',
+    description: 'Hai đội ngang ngửa, ưu tiên kiểm soát khu vực giữa sân.',
+    recommendedFormation: '2-3-1',
+    recommendedMentality: 'Balanced',
+    icon: 'Activity'
+  },
+  {
+    id: 'need-goal',
+    label: 'Cần bàn thắng gấp',
+    description: 'Thời gian không còn nhiều, dồn toàn lực lên tấn công.',
+    recommendedFormation: '2-1-2-1',
+    recommendedMentality: 'Attacking',
+    icon: 'Trophy'
+  },
+  {
+    id: 'uncoordinated-team',
+    label: 'Team mới / Giữ bóng kém',
+    description: 'Ưu tiên phòng ngự số đông, đá đơn giản và chờ phản công.',
+    recommendedFormation: '3-2-1',
+    recommendedMentality: 'Defensive',
+    icon: 'Users'
+  }
+];
+
 export const FORMATION_POSITIONS: Record<Formation, { x: number; y: number }[]> = {
   '2-3-1': [
     { x: 5, y: 50 },  // GK
